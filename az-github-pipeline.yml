@@ -1,0 +1,172 @@
+#[setup-pipeline] update stage dev, qa
+trigger:
+- main
+
+variables:
+  solutionDir: './'
+  azureServiceConnection: 'sconn-calculator'
+  subscriptionId: 'ae0d5ee9-54ad-466f-9db6-4301e35952b4'
+  resourceGroup: 'rg-UnitTestDemo'
+  location: 'northeurope'
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+- stage: build
+  jobs:
+    - job: build
+      displayName: 'Build web application'
+      steps:
+      - script: pwd
+        displayName: 'what directory are we in?'
+
+      - script: ls -la
+        displayName: 'what files are in this folder?'
+
+      - script: docker --version
+        displayName: 'docker version'
+        workingDirectory: '$(solutionDir)'
+    
+      - task: UseDotNet@2
+        displayName: 'Install .NET Core 2.1 SDK'
+        inputs:
+          version: '2.1.x'
+          packageType: sdk
+    
+      - script: dotnet build
+        displayName: 'dotnet build'
+        workingDirectory: '$(solutionDir)'
+
+      - task: DotNetCoreCLI@2
+        displayName: run unit tests
+        inputs:
+          command: 'test'
+          workingDirectory: '$(solutiondir)/test/UnitTestDemo.Tests'
+      
+      - task: DotNetCoreCLI@2
+        displayName: publish web application for azure
+        inputs:
+          command: publish
+          arguments: '-o $(build.artifactStagingDirectory)/for-azure'
+          workingDirectory: '$(solutiondir)/src/UnitTestDemo.WebUi'
+          zipAfterPublish: true
+          publishWebProjects: true
+      
+      - script: chmod +x ./create-deploy-scripts-folder.sh
+        displayName: 'added .sh folders permission'
+        workingDirectory: '$(solutionDir)'
+
+      - script: ./create-deploy-scripts-folder.sh
+        displayName: 'create deploy scripts folder'
+        workingDirectory: '$(solutionDir)'
+
+      - script: cp -r ./deploy-scripts $(build.artifactStagingDirectory)/deploy-scripts
+        displayName: copy deploy scripts to artifacts
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          # targetPath: '$(Pipeline.Workspace)'
+          targetPath: '$(build.artifactStagingDirectory)'
+          artifact: 'drop'
+          publishLocation: 'pipeline'
+    
+- stage: deploy_to_dev
+  jobs:
+  - job: deployToAppService
+    displayName: 'deploy to azure app service -- dev deployment slot'
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'drop'
+        targetPath: $(Pipeline.Workspace)/drop
+
+    - script: pwd
+      displayName: get dir
+      workingDirectory: $(Pipeline.Workspace)
+
+    - script: ls -lR
+      displayName: list content 
+      workingDirectory: $(Pipeline.Workspace)
+        
+    - script: chmod -R a+x *.sh
+      displayName: make shell scripts executable for deploy scripts
+      workingDirectory: '$(Pipeline.Workspace)/drop/deploy-scripts'
+
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        azureSubscription: 'sconn-calculator'
+        appType: 'webApp'
+        WebAppName: 'app-calculator'
+        deployToSlotOrASE: true
+        ResourceGroupName: 'rg-calculator'
+        SlotName: 'app-calculator-dev'
+        packageForLinux: '$(Pipeline.Workspace)/drop/for-azure/*.zip'
+        AppSettings: '-MiscSettings__BuildVersionMessage "$(Build.DefinitionName) - $(Build.BuildNumber)" -ASPNETCORE_DETAILEDERRORS "true"'
+
+- stage: wait_for_check_qa
+  pool: server
+  jobs:
+  - job: waitForApproval
+    displayName: 'wait for approval'
+    timeoutInMinutes: 4320    # 3 days
+    steps:
+    - task: ManualValidation@0
+      timeoutInMinutes: 1440 # task times out in 1 day
+      inputs:
+        notifyUsers: robertath@gmail.com
+        instructions: 'Please confirm new release for QA team evaluation'
+        onTimeout: 'reject'
+
+- stage: deploy_to_qa
+  jobs:
+  - job: deployToAppService
+    displayName: 'deploy to azure app service -- qa deployment slot'
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'drop'
+        targetPath: $(Pipeline.Workspace)/drop
+
+    - script: pwd
+      displayName: get dir
+      workingDirectory: $(Pipeline.Workspace)
+
+    - script: ls -lR
+      displayName: list content 
+      workingDirectory: $(Pipeline.Workspace)
+        
+    - script: chmod -R a+x *.sh
+      displayName: make shell scripts executable for deploy scripts
+      workingDirectory: '$(Pipeline.Workspace)/drop/deploy-scripts'
+    
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        azureSubscription: 'Azure subscription 1(ae0d5ee9-54ad-466f-9db6-4301e35952b4)'
+        appType: 'webApp'
+        WebAppName: 'app-calculator'
+        deployToSlotOrASE: true
+        ResourceGroupName: 'rg-calculator'
+        SlotName: 'app-calculator-qa'
+        packageForLinux: '$(Pipeline.Workspace)/drop/for-azure/*.zip'
+        AppSettings: '-MiscSettings__BuildVersionMessage "$(Build.DefinitionName) - $(Build.BuildNumber)" -ASPNETCORE_DETAILEDERRORS "true"'
+
+
+
+- stage: wait_for_approval_qa
+  pool: server
+  jobs:
+  - job: waitForApproval
+    displayName: 'wait for approval'
+    timeoutInMinutes: 4320    # 3 days
+    steps:
+    - task: ManualValidation@0
+      timeoutInMinutes: 1440 # task times out in 1 day
+      inputs:
+        notifyUsers: robertath@gmail.com
+        instructions: 'Please validate the test env development'
+        onTimeout: 'reject'
