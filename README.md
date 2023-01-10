@@ -16,7 +16,8 @@ webapp:
 1.Create a service
 ```
 az login
-az group create -l northeurope -n rg-yamldemonetcore
-az appservice plan create -g rg-yamldemonetcore -n plan-yamldemonetcore --sku S1
-az webapp create -g rg-yamldemonetcore -p plan-yamldemonetcore -n app-yamldemonetcore --% --runtime 'DOTNET|5.0'
+az group create -l northeurope -n rg-calculator
+az appservice plan create -g rg-calculator -n calculator-webapp-plan --sku S1
+az webapp create --name 'calculator-webapp' --plan 'calculator-webapp-plan' -g 'rg-calculator' --% --runtime "DOTNETCORE|2.1"
+az webapp deployment slot create --name calculator-webapp --resource-group 'rg-calculator' --slot dev
 ```
