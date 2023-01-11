@@ -5,9 +5,9 @@ name: .NET
 
 on:
   push:
-    branches: [ "pipelines-ci" ]
+    branches: [ "pipeline-cd" ]
   pull_request:
-    branches: [ "pipelines-ci" ]
+    branches: [ "pipeline-cd" ]
 
 env:
   AZURE_WEBAPP_NAME: calculator-webapp    # set this to your application's name
@@ -44,29 +44,23 @@ jobs:
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/drop
   
       
-  # CD-Dev:
-  #   runs-on: ubuntu-latest    
-  #   needs: CI
-  #   environment: 
-  #     name: 'Dev'
+  CD-Dev:
+    runs-on: ubuntu-latest    
+    needs: CI
+    environment: 
+      name: 'Dev'
 
-  #   steps:      
-  #     - name: Download artifact from build job
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: .net-app
-  #         path: .net-app 
+    steps:      
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v3
+        with:
+          name: .net-app
+          path: .net-app 
 
-  #     - name: Download artifact from build job
-  #       uses: actions/download-artifact@v3
-  #       with:
-  #         name: bicep-template
-  #         path: bicep-template
-
-  #     - name: Azure Login
-  #       uses: azure/login@v1
-  #       with:
-  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
         
       # - name: deploy
       #   uses: azure/arm-deploy@v1
