@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "pipelines-ci" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "pipelines-ci" ]
 
 env:
   AZURE_WEBAPP_NAME: calculator-webapp    # set this to your application's name
@@ -34,18 +34,12 @@ jobs:
     - name: Publish
       run: dotnet publish -c Release -o ${{ env.DOTNET_ROOT }}/drop
       
-#     - name: Upload a Build Artifact for deployment job
-#       uses: actions/upload-artifact@v3.1.2
-#       with:
-#         name: .net-app        
-#         path: ${{ env.DOTNET_ROOT }}/drop
+    - name: Upload a Build Artifact for deployment job
+      uses: actions/upload-artifact@v3.1.2
+      with:
+        name: .net-app       
+        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/drop
   
-#     - name: Upload a Build Artifact for deployment job
-#       uses: actions/upload-artifact@v3.1.2
-#       with:
-#         name: bicep-template
-#         path: ${{ env.TEMPLATE_FILE }}
-      
   # CD-Dev:
   #   runs-on: ubuntu-latest    
   #   needs: CI
