@@ -2,7 +2,7 @@ name: .NET
 
 on:
   push:
-    branches: [ "main", "ci-sonarcloud" ]
+    branches: [ "main", "setup-applicationinsights" ]
   pull_request:
     branches: [ "main" ]
     types: [opened, synchronize, reopened]
