@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "pipeline-cd" ]
+    branches: [ "main" ]
 
 env:
   AZURE_WEBAPP_NAME: calculator-webapp    # set this to your application's name
