@@ -1,0 +1,23 @@
+{
+  "ServerUri": "https://sonarcloud.io/",
+  "Organization": {
+    "Key": "mithoffmann",
+    "Name": "mithoffmann"
+  },
+  "ProjectKey": "mithoffmann_calculator",
+  "ProjectName": "calculator",
+  "Profiles": {
+    "CSharp": {
+      "ProfileKey": "AYWjKt_1RbVf7sOV9IUY",
+      "ProfileTimestamp": "2022-12-21T10:42:51Z"
+    },
+    "Js": {
+      "ProfileKey": "AYWjKt_1RbVf7sOV9IUa",
+      "ProfileTimestamp": "2022-12-07T09:34:26Z"
+    },
+    "Ts": {
+      "ProfileKey": "AYWjKt_1RbVf7sOV9IUn",
+      "ProfileTimestamp": "2022-12-07T09:41:27Z"
+    }
+  }
+}
