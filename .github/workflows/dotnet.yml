@@ -2,7 +2,7 @@ name: .NET
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "ci-sonarcloud" ]
   pull_request:
     branches: [ "main" ]
 
