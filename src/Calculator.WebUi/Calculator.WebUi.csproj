@@ -3,9 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <DebugType>Full</DebugType>
+    <ApplicationInsightsResourceId>/subscriptions/aa2b6366-781d-451b-bc50-598e977653c9/resourceGroups/rg-calculator/providers/microsoft.insights/components/calculator-webapp</ApplicationInsightsResourceId>
+    <UserSecretsId>3b9c412f-17b5-4a5c-bb78-127541fbec16</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.15.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="NuGet.CommandLine" Version="6.4.0">
       <PrivateAssets>all</PrivateAssets>
