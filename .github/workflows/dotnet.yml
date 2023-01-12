@@ -73,9 +73,10 @@ jobs:
         path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/drop
   
       
-  CD-Dev:
+  Deploy:
+    name: Deploy to Azure - Webapp service
     runs-on: ubuntu-latest    
-    needs: CI
+    needs: build
     environment: 
       name: 'Dev'
 
