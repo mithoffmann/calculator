@@ -10,7 +10,7 @@ namespace Calculator.WebUi.Controllers
 {
     public class CalculatorController : Controller
     {
-        private ICalculatorService _CalculatorService;
+        private readonly ICalculatorService _CalculatorService;
 
         public CalculatorController(ICalculatorService service)
         {
