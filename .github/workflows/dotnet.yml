@@ -5,6 +5,7 @@ on:
     branches: [ "main", "ci-sonarcloud" ]
   pull_request:
     branches: [ "main" ]
+    types: [opened, synchronize, reopened]
 
 env:
   AZURE_WEBAPP_NAME: calculator-webapp    
@@ -13,8 +14,8 @@ env:
 
 jobs:
   build:
-    name: Build, Analyze and Publish Artifact
-    runs-on: ubuntu-latest
+    name: Build, Analyze and Publish
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v3
     - name: Setup .NET
@@ -55,11 +56,22 @@ jobs:
         key: ${{ runner.os }}-sonar-scanner
         restore-keys: ${{ runner.os }}-sonar-scanner
       
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@v1.8
+    - name: Install SonarCloud scanner
+      if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
+      shell: powershell
+      run: |
+        New-Item -Path .\.sonar\scanner -ItemType Directory
+        dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+        
+    - name: Build and analyze
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: powershell
+      run: |
+        .\.sonar\scanner\dotnet-sonarscanner begin /k:"mithoffmann_calculator" /o:"mithoffmann" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+        <insert_your_clean_build_command>
+        .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"  
     
     
     #Publish Artifact
@@ -74,7 +86,7 @@ jobs:
   
       
   Deploy:
-    name: Deploy to Azure - Webapp service
+    name: Deploy - Dev
     runs-on: ubuntu-latest    
     needs: build
     environment: 
